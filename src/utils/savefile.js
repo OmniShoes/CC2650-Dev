@@ -19,7 +19,12 @@ export function saveCsv(data, filename = 'data.csv') {
   }
   csvData += `${keys.join(',')}\n`;
   data.forEach((row) => {
-    csvData += `${keys.map((key) => (row[key] ? '1' : '0')).join(',')}\n`;
+    csvData += `${keys.map((key) => {
+      if (key === 'marked') {
+        return row[key] ? '1' : '0';
+      }
+      return row[key];
+    }).join(',')}\n`;
   });
   const bb = new Blob([csvData], { type: 'text/csv' });
   const a = document.createElement('a');
