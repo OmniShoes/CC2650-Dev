@@ -1,7 +1,7 @@
 const createSettingsSlice = (set) => ({
   settings: {
     deviceNamePrefix: 'CC2650',
-    retrievalInterval: 130,
+    retrievalInterval: 150,
     selectedData: {},
     allowMarking: true,
     setDeviceNamePrefix: (deviceNamePrefix) => {

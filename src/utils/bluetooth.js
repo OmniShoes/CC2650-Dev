@@ -1,4 +1,5 @@
 import useStore from '../store';
+import cc2650uuids from './cc2650uuids';
 
 export const isWebBtAvailable = () => {
   if (navigator.bluetooth) {
@@ -9,12 +10,13 @@ export const isWebBtAvailable = () => {
 
 export const getDevice = async (namePrefix = 'CC2650') => {
   const { bt } = useStore.getState();
+  const serviceUuids = Object.values(cc2650uuids).map((service) => service.uuid);
   if (isWebBtAvailable()) {
     const bluetoothDevice = await navigator.bluetooth.requestDevice({
       filters: [{
         namePrefix,
       }],
-      optionalServices: [0x180f],
+      optionalServices: serviceUuids,
     });
     useStore.setState({ bt: { ...bt, bluetoothDevice } });
     return bluetoothDevice;
