@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer } from 'react';
+import React, { useState, useEffect, useReducer, useRef } from 'react';
 
 import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
@@ -27,13 +27,32 @@ function readingListReducer(state, action) {
 
 export default function Page() {
   const { bluetoothDevice } = useStore((state) => state.bt, shallow);
+  const {
+    deviceNamePrefix, retrievalInterval, allowMarking,
+  } = useStore((state) => state.settings);
   const { setLoading, unsetLoading } = useStore((state) => state.state);
   const [timeoutID, setTimeoutID] = useState(null);
   const [readingList, readingListDispatch] = useReducer(readingListReducer, []);
   const [readingText, setReadingText] = useState('');
+  // const [marked, setMarked] = useState(false);
+  const markedRef = useRef(false);
 
   useEffect(() => {
-    setReadingText(readingList.map((x) => `timestamp: ${new Date(x.timestamp).toJSON()}\t\t\t\tbattery_level: ${x.battery_level}`).join('\n'));
+    setReadingText(readingList.map(
+      (x) => {
+        const keys = Object.keys(x);
+        const timestampIndex = keys.indexOf('timestamp');
+        if (timestampIndex > -1) {
+          keys.splice(timestampIndex, 1);
+        }
+        let line = `timestamp: ${new Date(x.timestamp).toJSON()}`;
+        for (let i = 0; i < keys.length; i += 1) {
+          const key = keys[i];
+          line += `\t\t${key}: ${x[key]}`;
+        }
+        return line;
+      },
+    ).join('\n'));
   }, [readingList]);
 
   const startRecording = () => {
@@ -45,15 +64,20 @@ export default function Page() {
       setTimeoutID(setInterval(() => {
         characteristic.readValue().then((dataView) => {
           const data = dataView.getUint8(0);
+          const payload = {
+            timestamp: Date.now(),
+            battery_level: data,
+          };
+          if (allowMarking) {
+            payload.marked = markedRef.current;
+          }
+          markedRef.current = false;
           readingListDispatch({
             type: 'add',
-            payload: {
-              timestamp: Date.now(),
-              battery_level: data,
-            },
+            payload,
           });
         });
-      }, 125));
+      }, retrievalInterval));
       unsetLoading();
     });
   };
@@ -98,6 +122,24 @@ export default function Page() {
                         Start
                       </Button>
                     )}
+                    {
+                      allowMarking && (
+                        <Button
+                          variant="contained"
+                          className="w-64 h-64"
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            markedRef.current = true;
+                            setTimeout(() => {
+                              markedRef.current = false;
+                            }, 1000);
+                          }}
+                        >
+                          Mark
+                        </Button>
+                      )
+                    }
                     <TextField label="Readings" variant="outlined" multiline maxRows={8} value={readingText} className="self-stretch" />
                     <div className="flex flex-row gap-4">
                       <Button
@@ -164,7 +206,7 @@ export default function Page() {
             onClick={async (e) => {
               e.preventDefault();
               e.stopPropagation();
-              await getDevice();
+              await getDevice(deviceNamePrefix);
             }}
           >
             Connect

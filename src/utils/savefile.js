@@ -14,9 +14,12 @@ export function saveJson(data, filename = 'data.json') {
 export function saveCsv(data, filename = 'data.csv') {
   let csvData = '';
   const keys = Object.keys(data[0]);
+  if (!keys.includes('marked')) {
+    keys.push('marked');
+  }
   csvData += `${keys.join(',')}\n`;
   data.forEach((row) => {
-    csvData += `${keys.map((key) => row[key]).join(',')}\n`;
+    csvData += `${keys.map((key) => (row[key] ? '1' : '0')).join(',')}\n`;
   });
   const bb = new Blob([csvData], { type: 'text/csv' });
   const a = document.createElement('a');
