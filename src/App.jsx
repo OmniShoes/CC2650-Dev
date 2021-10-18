@@ -9,6 +9,7 @@ import Home from './pages/Home';
 import Settings from './pages/Settings';
 import NoMatch from './pages/NoMatch';
 import LoadingScreen from './components/LoadingScreen';
+import ReloadPrompt from './components/ReloadPrompt';
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
           </Route>
         </Switch>
       </Router>
+      <ReloadPrompt />
     </>
   );
 }
