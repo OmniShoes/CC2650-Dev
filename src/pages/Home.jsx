@@ -61,12 +61,12 @@ export default function Page() {
   }, [readingList]);
 
   const configSensors = async () => {
+    // https://github.com/futomi/html5-CC2650SensorTag.js/blob/master/CC2650SensorTag.js#L658
+    // ............................................... to be encapsulated into a function
     const motionConfigChar = await getCharacteristic(
       motionUudiInfo.uuid,
       motionUudiInfo.characteristics.motion_config.uuid,
     );
-    // ............................................... to be encapsulated into a function
-    // https://github.com/futomi/html5-CC2650SensorTag.js/blob/master/CC2650SensorTag.js#L663
     // first byte (enable)
     let v1 = 0b00000000;
     for (let i = 0; i < 8; i++) {
@@ -80,11 +80,21 @@ export default function Page() {
     // second byte (range)
     const bufferView2 = new Uint8Array([0]); // 0=2G, 1=4G, 2=8G, 3=16G
     // merge 2 bytes
-    const bufferView = new Uint8Array(2);
-    bufferView.set(bufferView1, 0);
-    bufferView.set(bufferView2, 1);
+    const bufferViewConfig = new Uint8Array(2);
+    bufferViewConfig.set(bufferView1, 0);
+    bufferViewConfig.set(bufferView2, 1);
     // ...............................................
-    await motionConfigChar.writeValue(bufferView);
+    await motionConfigChar.writeValue(bufferViewConfig);
+    // https://github.com/futomi/html5-CC2650SensorTag.js/blob/master/CC2650SensorTag.js#L658
+    // ............................................... to be encapsulated into a function
+    const motionPeriodChar = await getCharacteristic(
+      motionUudiInfo.uuid,
+      motionUudiInfo.characteristics.motion_period.uuid,
+    );
+    const d = parseInt(100 / 10, 10); // 100ms
+    const bufferViewPeriod = new Uint8Array([d]);
+    await motionPeriodChar.writeValue(bufferViewPeriod);
+    // ...............................................
   };
 
   const startRecording = async () => {
